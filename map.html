@@ -10,8 +10,8 @@
   }
   #map {
     width: 100%;
-    height: 400px;
-    margin-top: 10px;
+    height: 420px;
+    margin-top: 15px;
   }
   #addressBox {
     width: 90%;
@@ -24,6 +24,10 @@
     font-size: 18px;
     margin-top: 10px;
     cursor: pointer;
+    background: #4a6cf7;
+    color: white;
+    border: none;
+    border-radius: 8px;
   }
 </style>
 
@@ -39,7 +43,7 @@ function initMap() {
     geocoder = new google.maps.Geocoder();
 
     map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 31.703, lng: 35.118 }, 
+        center: { lat: 31.703, lng: 35.118 },
         zoom: 14
     });
 
@@ -75,9 +79,13 @@ function submitLocation() {
         return;
     }
 
-    const baseUrl = "https://form.jotform.com/253187465582063";
+    const formUrl = "https://forms.fillout.com/t/3MH72AN2ffus";
 
-    const redirectUrl = `${baseUrl}?address=${encodeURIComponent(selectedAddress)}&lat=${selectedLat}&lng=${selectedLng}`;
+    const redirectUrl =
+        formUrl +
+        "?address=" + encodeURIComponent(selectedAddress) +
+        "&lat=" + selectedLat +
+        "&lng=" + selectedLng;
 
     window.location.href = redirectUrl;
 }
@@ -96,6 +104,3 @@ function submitLocation() {
 
 </body>
 </html>
-
-
-
