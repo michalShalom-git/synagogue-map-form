@@ -15,14 +15,22 @@
 
 <div id="map"></div>
 
-<!-- השדות שנשלחים ל-Jotform מה־iframe -->
-<input type="hidden" id="address">
-<input type="hidden" id="lat">
-<input type="hidden" id="lng">
-
 <script>
+  function updateParentForm(addr, lat, lng) {
+    const parentDoc = window.parent.document;
+
+    // כתובת מלאה
+    parentDoc.querySelector("#input_11").value = addr || "";
+
+    // LAT
+    parentDoc.querySelector("#input_14").value = lat || "";
+
+    // LNG
+    parentDoc.querySelector("#input_12").value = lng || "";
+  }
+
   function initMap() {
-    const start = { lat: 31.7029, lng: 35.1147 }; // ברירת מחדל - ביתר עילית
+    const start = { lat: 31.7029, lng: 35.1147 }; // ברירת מחדל – ביתר עילית
 
     const map = new google.maps.Map(document.getElementById("map"), {
       zoom: 14,
@@ -44,7 +52,7 @@
       const place = autocomplete.getPlace();
       if (!place.geometry) return;
 
-      // עדכון מפה
+      // שינוי המפה
       if (place.geometry.viewport) {
         map.fitBounds(place.geometry.viewport);
       } else {
@@ -52,48 +60,37 @@
         map.setZoom(16);
       }
 
-      // עדכון מרקר
+      // שינוי המיקום של המרקר
       marker.setPosition(place.geometry.location);
 
-      // עדכון ערכים
-      document.getElementById("address").value = place.formatted_address;
-      document.getElementById("lat").value = place.geometry.location.lat();
-      document.getElementById("lng").value = place.geometry.location.lng();
-
-      sendDataOut();
+      // עדכון לטופס
+      updateParentForm(
+        place.formatted_address,
+        place.geometry.location.lat(),
+        place.geometry.location.lng()
+      );
     });
 
-    // כשגוררים את המרקר
+    // גרירת המרקר
     google.maps.event.addListener(marker, "dragend", function () {
       const pos = marker.getPosition();
 
-      document.getElementById("lat").value = pos.lat();
-      document.getElementById("lng").value = pos.lng();
-
-      // reverse geocode
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location: pos }, function (results, status) {
         if (status === "OK" && results[0]) {
-          document.getElementById("address").value = results[0].formatted_address;
-          sendDataOut();
+          updateParentForm(
+            results[0].formatted_address,
+            pos.lat(),
+            pos.lng()
+          );
         }
       });
     });
   }
-
-  // החזרת נתונים ל-Jotform
-  function sendDataOut() {
-    window.parent.postMessage(
-      {
-        address: document.getElementById("address").value,
-        lat: document.getElementById("lat").value,
-        lng: document.getElementById("lng").value,
-      },
-      "*"
-    );
-  }
 </script>
+
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDh1XXzy1hGTBUrXjtxCVkEnpBq4G0K0tQ&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
+
