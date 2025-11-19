@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>בחר מיקום</title>
+
 <style>
   body {
     font-family: Arial, sans-serif;
     text-align: center;
+    direction: rtl;
   }
   #map {
     width: 100%;
@@ -22,7 +24,7 @@
   button {
     padding: 12px 20px;
     font-size: 18px;
-    margin-top: 10px;
+    margin-top: 12px;
     cursor: pointer;
     background: #4a6cf7;
     color: white;
@@ -34,7 +36,7 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDh1XXzy1hGTBUrXjtxCVkEnpBq4G0K0tQ&libraries=places"></script>
 
 <script>
-let map, marker, geocoder;
+let map, marker, geocoder, autocomplete;
 let selectedAddress = "";
 let selectedLat = "";
 let selectedLng = "";
@@ -42,40 +44,66 @@ let selectedLng = "";
 function initMap() {
     geocoder = new google.maps.Geocoder();
 
+    // יצירת המפה
     map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: 31.703, lng: 35.118 },
         zoom: 14
     });
 
+    // חיפוש אוטומטי
+    const addressInput = document.getElementById("addressBox");
+    autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        componentRestrictions: { country: "il" }
+    });
+
+    autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) {
+            alert("לא נמצאה כתובת");
+            return;
+        }
+
+        selectedAddress = place.formatted_address;
+        selectedLat = place.geometry.location.lat();
+        selectedLng = place.geometry.location.lng();
+
+        placeMarker(place.geometry.location);
+    });
+
+    // לחיצה על המפה
     map.addListener("click", function(event) {
-        placeMarker(event.latLng);
+        reverseGeocode(event.latLng);
     });
 }
 
 function placeMarker(location) {
-    if (marker) {
-        marker.setMap(null);
-    }
+    if (marker) marker.setMap(null);
 
     marker = new google.maps.Marker({
         position: location,
         map: map
     });
 
-    selectedLat = location.lat();
-    selectedLng = location.lng();
+    map.panTo(location);
+}
 
-    geocoder.geocode({ location: location }, function(results, status) {
+function reverseGeocode(latlng) {
+    geocoder.geocode({ location: latlng }, function(results, status) {
         if (status === "OK" && results[0]) {
             selectedAddress = results[0].formatted_address;
+            selectedLat = latlng.lat();
+            selectedLng = latlng.lng();
+
             document.getElementById("addressBox").value = selectedAddress;
+
+            placeMarker(latlng);
         }
     });
 }
 
 function submitLocation() {
     if (!selectedAddress) {
-        alert("נא לבחור מיקום על המפה");
+        alert("נא לבחור מיקום או להקליד כתובת");
         return;
     }
 
@@ -94,13 +122,13 @@ function submitLocation() {
 
 <body onload="initMap()">
 
-<h2>בחר מיקום על המפה</h2>
+<h2>בחרי מיקום במפה או הקלידי כתובת</h2>
 
-<input type="text" id="addressBox" placeholder="הכתובת תופיע כאן…" readonly>
+<input type="text" id="addressBox" placeholder="הקלידי כתובת…" />
 
 <div id="map"></div>
 
-<button onclick="submitLocation()">בחר מיקום</button>
+<button onclick="submitLocation()">אישור מיקום</button>
 
 </body>
 </html>
